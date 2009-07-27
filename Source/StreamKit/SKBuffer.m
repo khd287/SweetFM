@@ -1,0 +1,90 @@
+//
+//  SKBuffer.m
+//  StreamKit
+//
+//  Created by Q on 02.07.09.
+//
+//
+//  Permission is hereby granted, free of charge, to any person 
+//  obtaining a copy of this software and associated documentation
+//  files (the "Software"), to deal in the Software without restriction,
+//  including without limitation the rights to use, copy, modify, 
+//  merge, publish, distribute, sublicense, and/or sell copies of 
+//  the Software, and to permit persons to whom the Software is 
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be 
+//  included in all copies or substantial portions of the Software.
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+//  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
+//  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+//  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR 
+//  ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
+//  CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+//  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+#import "SKBuffer.h"
+
+
+@implementation SKBuffer
+
++ (SKBuffer *)bufferWithSize:(NSUInteger)aSize
+{
+	return [[[SKBuffer alloc] initWithByteSize:aSize] autorelease];
+}
+
+- (id)initWithByteSize:(NSUInteger)aSize
+{
+	if(self = [super init])
+	{
+		byteSize = aSize;
+		dataStore = [[NSMutableData alloc] init];
+		dataLock = [NSLock new];
+	}
+	
+	return self;
+}
+
+- (void)dealloc
+{
+	[dataLock release];
+	[dataStore release];
+	[super dealloc];
+}
+
+- (NSUInteger)byteSize
+{
+	return byteSize;
+}
+
+- (void)push:(NSData *)theData
+{
+	[dataLock lock];
+	[dataStore appendData:theData];
+	[dataLock unlock];
+}
+
+- (void)drain
+{
+	shouldDrain = YES;
+}
+
+- (NSData *)nextChunk
+{
+	if([dataStore length] > 0 && 
+		 (shouldDrain || [dataStore length] > byteSize))
+	{
+		[dataLock lock];
+		
+		NSData *data = [NSData dataWithData:dataStore];
+		[dataStore setLength:0];
+		
+		[dataLock unlock];
+		
+		return data;
+	}
+
+	return nil;
+}
+
+@end

@@ -1,0 +1,469 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<link type="text/css" href="skin.css" rel="stylesheet" />
+	<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+	
+	<script src="js/prototype.js"></script>
+	<script src="js/scriptaculous/scriptaculous.js"></script>
+	<script src="js/scriptaculous/slider.js"></script>
+	<script src="js/scriptaculous/effects.js"></script>
+	<script src="js/scriptaculous/dragdrop.js"></script>
+	
+	<script type="text/javascript">
+			
+		// progress bar
+		var progressBar;
+		var volumeSlider;
+		
+		var trackDuration = 0;
+		
+		// cover-badge
+		var coverNumber = 0;
+		var coverCount = 0;
+				
+		// error pane
+		var errTimeout;
+		
+		function isMenuPopped()
+		{
+			return !$('quickMenu').visible();
+		}
+		
+		function toTimecode(seconds)
+		{
+			minutes = Math.floor(seconds / 60);
+			remSec = seconds-(minutes*60);
+			
+			var minString = minutes < 10 ? "0"+minutes : minutes;
+			var secString = remSec < 10 ? "0"+remSec : remSec;
+			
+			return minString + ":" + secString;
+		}
+		
+		function flipQuickMenu()
+		{
+			if(isMenuPopped())
+				Effect.SlideDown('quickMenu', { duration: 0.2 });
+			else
+				Effect.SlideUp('quickMenu', { duration: 0.2 });
+		}
+		
+		function hideQuickMenu()
+		{
+			Effect.SlideUp('quickMenu', { duration: 0.2 });
+		}
+		
+		function createSelection(field, start, end) 
+		{
+	        if( field.createTextRange ) {
+	            var selRange = field.createTextRange();
+	            selRange.collapse(true);
+	            selRange.moveStart('character', start);
+	            selRange.moveEnd('character', end);
+	            selRange.select();
+	        } else if( field.setSelectionRange ) {
+	            field.setSelectionRange(start, end);
+	        } else if( field.selectionStart ) {
+	            field.selectionStart = start;
+	            field.selectionEnd = end;
+	        }
+	        
+	        field.focus();
+    	} 
+    	
+    	function enableCoverBadge(enable)
+    	{    		
+    		if(enable)
+    			$('coverBadge').show();
+    		else
+    			$('coverBadge').hide();
+    	}
+    	
+    	function goToPosition()
+    	{
+    		xloc = Event.pointerX(window.event);
+    		yloc = Event.pointerY(window.event);
+    		
+    		bar = $('progressBar');
+    
+    		barLeft = Element.viewportOffset(bar)['left'];
+    		barTop = Element.viewportOffset(bar)['top'];
+    		barHeight = Element.getHeight(bar);
+    		barWidth = Element.getWidth(bar);
+    		
+    		newWidth = Math.round(xloc - barLeft);
+    		//alert("(" + xloc + "," +yloc + ") (" + barLeft + "," + barTop + ") (" + barHeight + "," + barWidth + ") " + newWidth);
+    		
+    		if(xloc <= (barLeft+barWidth) && xloc >= barLeft)
+    		{
+    			if(yloc <= (barTop+barHeight) && yloc >= barTop)
+    			{
+ 					seconds = Math.round(trackDuration * (newWidth/barWidth));
+ 					app.setPosition(seconds);
+    			}
+    		}
+    	}
+    	
+    	function mouseDelta(event)
+    	{
+    		/*
+			 * Orginal: http://adomas.org/javascript-mouse-wheel/
+			 */
+			 
+    		var delta = 0;
+			if (!event) event = window.event;
+			if (event.wheelDelta) {
+				delta = event.wheelDelta/120; 
+				if (window.opera) delta = -delta;
+			} else if (event.detail) { delta = -event.detail/3;	}
+			return Math.round(delta); //Safari Round
+    	}
+    	    										
+		document.observe("dom:loaded",function() {
+					
+			// progress bar
+			progressBar = $('progressBarFill');
+			progressBar.setStyle({width: '0px'});
+		    //progressBar.morph({width: '233px'}, { duration: 5 });
+		    		    
+		    // slider
+		    volumeSlider = new Control.Slider(
+		    	$('volumeSliderKnob'), 
+		    	$('volumeSlider'), {
+      				range: $R(0, 1),
+      				sliderValue: 0.5,
+      				onSlide: function(value) {
+        				app.setVolume(value);
+        				//uiSetPosition(Math.round(value*140));
+     				},
+     				onChange: function(value) {
+        				app.setVolume(value);
+        				//uiSetPosition(Math.round(value*140));
+     				}
+      		});
+      		
+		  	// cover scroll
+			$('case').observe('mousewheel', function(event) { 
+			
+				diff = mouseDelta(event);
+				if(diff > 0)
+				  app.nextCover();
+				else
+				  app.previousCover();
+			});
+      		      		
+      		enableCoverBadge(false);
+			$('stationName').focus();
+			app.DOMReady();
+			
+      		// some testing code
+      		//uiSetScrobbleEnabled(true);
+      		//uiSetVolume(50);
+			//uiSetDuration(140);
+			//uiSetPosition(100);
+			//uiSetPinEnabled(false);
+			//alert(navigator.appName + " " + navigator.appVersion);			
+		});
+				    
+		//
+		// UI METHODS CALLED FROM SWEETFM
+		//
+		function uiSetQuickMenuOpen()
+		{
+			//
+			// api-function: 
+			// called from app to open the quick menu
+			//
+			flipQuickMenu();
+		}
+		
+		function uiSetPinEnabled(pinEnabled)
+		{
+			if(pinEnabled)
+				$('pin').src = 'pinOn.png';
+			else
+				$('pin').src = 'pinOff.png';
+		}
+		
+		function uiSetScrobbleEnabled(enableScrobble)
+		{
+			//
+			// api-function:
+			// called from app with a bool value indicating the scrobble state
+			//
+			if(enableScrobble)
+				$('scrobbleButton').src = "scrobbleOn.png";
+			else
+				$('scrobbleButton').src = "scrobbleOff.png";
+		}
+		
+		function uiSetCoverImage(base64ImageSource)
+		{
+			//
+			// api-function:
+			// called from app with a base64 encoded image string
+			// if the cover image is empty, an empty string (one blank " ") is passed.
+			//
+			if(base64ImageSource.length < 20)
+				$('albumCover').hide();
+			else
+			{
+				$('albumCover').show();
+				$('albumCover').src = base64ImageSource;
+			}
+		}
+		
+		function uiSetCoverCount(count)
+		{
+			//
+			// api-function:
+			// called from app to set the total cover count
+			//
+			if(count == 0)
+				enableCoverBadge(false);
+			else
+				enableCoverBadge(true);
+				
+			coverCount = count;
+			$('coverBadge').innerHTML = coverNumber + "/" + coverCount;
+		}
+		
+		function uiSetCoverNumber(currentNumber)
+		{
+			//
+			// api-function:
+			// called from app to set the index of the currently 
+			// displayed cover image
+			//
+			coverNumber = currentNumber;
+			$('coverBadge').innerHTML = coverNumber + "/" + coverCount;
+		}
+			
+		function uiSetTrackName(trackName)
+		{
+			//
+			// api-function:
+			// called from app to set the track name
+			//
+			$('uiTrackName').innerHTML = trackName;	
+		}
+		
+		function uiSetTrackArtist(trackArtist)
+		{
+			//
+			// api-function:
+			// called from app to set the track artist
+			//
+			$('uiTrackArtist').innerHTML = trackArtist;
+		}
+		
+		function uiSetTrackAlbum(trackAlbum)
+		{
+			//
+			// api-function:
+			// called from app to set the album name
+			//
+			$('uiTrackAlbum').innerHTML = trackAlbum;	
+		}
+				
+		function uiSetVolume(vol)
+		{
+			// 
+			// api-function:
+			// called from app to set the current device volume
+			//
+			volumeSlider.setValue(vol);
+		}
+				
+		function uiSetStationTitle(stationTitle, selectFrom, to)
+		{
+			//
+			// api-function: 
+			// called from app to set the station title (text field)
+			// the "selectFrom" and "to" parameters indicate the range
+			// that should be selected in the text field
+			//
+			hideQuickMenu();
+			
+			var field = $('stationName');
+			field.value = stationTitle;
+			
+			createSelection(field, selectFrom, to);
+		}
+		
+		function uiGetStationTitle()
+		{
+			//
+			// api-function: 
+			// called from app to get the station title (text field)
+			//
+			return $F('stationName');
+		}
+		
+		function uiSetPosition(seconds)
+		{
+			//
+			// api-function: called from app to set the track position
+			// (typically every 0.5 seconds)
+			//
+			
+			if(trackDuration < 1)
+				trackDuration = 1;
+				
+			progress = seconds / trackDuration;
+			barWidth = Math.round(progress * 233) + "px";
+			
+			if(seconds < 5)
+				progressBar.morph({width: barWidth}, { duration: 0 });
+			else
+				progressBar.morph({width: barWidth}, { duration: 0.5 });
+			
+			$('trackPosition').innerHTML = toTimecode(seconds);
+		}
+		
+		function uiSetDuration(seconds)
+		{
+			//
+			// api-function:
+			// called from app to set the track duration
+			//
+			trackDuration = seconds;
+			$('trackDuration').innerHTML = toTimecode(seconds);
+		}
+		
+		function uiSetErrorMessage(msg)
+		{
+			//
+			// api-function:
+			// called from app to set the error message
+			//
+			var elem = $('errorPane');
+			
+			elem.innerHTML = msg;
+			elem.show();
+			//new Effect.Opacity(elem, {duration:0.2, from:0.0, to:1.0});
+		
+			window.clearTimeout(errTimeout);	
+			errTimeout = window.setTimeout(function() { 
+				elem.hide();
+				//new Effect.Opacity(elem, {duration:1.0, from:1.0, to:0.0}); 
+			},
+			3500);			
+		}
+		
+		function uiSetStatusMessage(msg)
+		{
+			//
+			// api-function:
+			// called from app to set the status message
+			//
+			msgElem = $('statusMessage');
+			
+			if(msg.length > 1)
+			{
+				msgElem.innerHTML = msg;
+				$('uiTrackName').hide();
+				$('uiTrackArtist').hide();
+				$('uiTrackAlbum').hide();
+				$('status').show();
+			}
+			else
+			{
+				$('uiTrackName').show();
+				$('uiTrackArtist').show();
+				$('uiTrackAlbum').show();
+				$('status').hide();
+			}
+		}
+				
+		function uiClassesAllowingDrag()
+		{
+			//
+			// api-function:
+			// return an array of css classes that can be dragged
+			//
+			return new Array('window', 'case', 'coverBadge');
+		}	
+		
+		function uiResizeCoversTo()
+		{
+			//
+			// api-function: used for resizing the cover images before sending 
+			// them to the ui to avoid consuming too much memory (WebKit issue).
+			//
+			return new Array(160, 160);
+		}
+
+	</script>
+</head>
+<body>
+  	
+  	<!-- 
+  	YOU SHOULD BE ABLE TO USE ALL WEBKIT FUNCTIONS DESCRIBED HERE (AS LONG AS IT IS NOT A BETA STAGE)
+  	http://developer.apple.com/documentation/AppleApplications/Reference/SafariCSSRef/Introduction.html
+  	-->
+  	
+	<div class="window">
+		
+		<!-- window buttons -->
+		<img id="close" src="close.png" alt="close" onclick="app.closeWindow()" />
+		<img id="pin" src="pinOff.png" alt="pin" onclick="app.togglePinned()" />
+		<!-- control bar buttons -->
+		<div class="stop" onclick="app.stop()" ></div>
+		<div class="playPause" onclick="app.playPause()" ></div>
+		<div class="skip" onclick="app.next()" ></div>
+		<div class="love" onclick="app.love()" ></div>
+		<div class="playlist" onclick="app.addToPlaylist()" ></div>
+		<div class="ban" onclick="app.ban()" ></div>
+		<!-- text field -->
+		<div id="stationSelect" onclick="flipQuickMenu(); app.openQuickMenu()" ></div>
+		<input type="text" class="stationName" id="stationName" onkeydown="if (event.keyCode == 13) app.tuneToStation($('stationName').value)" />
+		<!-- hidden menu -->
+		<div id="quickMenu" style="display: none">
+		  <table id="quickTable">
+		  	<tr>
+		  		<td><div id="artistSlot" onclick="app.setArtistStationType()"></div></td>
+		  		<td><div id="lovedSlot" onclick="app.setLovedStationType()"></div></td>
+		  	</tr>
+		  	<tr>
+		  		<td><div id="tagsSlot" onclick="app.setTagsStationType()"></div></td>
+		  		<td><div id="recommendedSlot" onclick="app.setRecommendedStationType()"></div></td>
+		  	</tr>
+		  	<tr>
+		  		<td><div id="librarySlot" onclick="app.setLibraryStationType()"></div></td>
+		  		<td><div id="fansSlot" onclick="app.setFansStationType()"></div></td>
+		  	</tr>
+		  	<tr>
+		  		<td><div id="neighboursSlot" onclick="app.setNeighbourStationType()"></div></td>
+		  		<td><div id="shuffleSlot" onclick="app.setShuffleStationType()"></div></td>
+		  	</tr>
+		  </table>
+		</div>
+		<!-- cover -->
+		<div id="case" class="case" onscroll="coverScroll()"></div>
+		<div class="buy" onclick="app.openBuyPage()"></div>
+		<div class="caseBackground"></div>
+		<img id="albumCover" src="" alt="" />
+		<div id="coverBadge" class="coverBadge">0/0</div>
+		<!-- error pane -->
+		<div id="errorPane" style="display:none">error</div>
+		<!-- status -->
+		<div id="status" style="display:none"><div id="statusMessage">connecting</div><img src="spinner.gif" alt="spinner" /></div>
+		<!-- text boxes -->
+		<div id="uiTrackName" class="marquee" onclick="app.openTrackPage()">Not active</div>
+		<div id="uiTrackArtist" class="marquee" onclick="app.openArtistPage()"></div>
+		<div id="uiTrackAlbum" class="marquee" onclick="app.openAlbumPage()"></div>
+		<!-- progress bar -->
+		<div id="progressBar" onclick="goToPosition()"><div id="progressBarFill"></div></div>
+		<div><span id="trackPosition">00:00</span></div>
+		<div><span id="trackDuration">00:00</span></div>
+		<!-- volume slider -->
+		<div id="volumeSlider"><div id="volumeSliderKnob"></div></div>
+		<!-- scrobble button -->
+		<img id="scrobbleButton" class="scrobble" src="scrobbleOff.png" alt="scrobble off" onclick="app.toggleScrobble()" />
+				
+	</div>
+
+</body>
+</html>
