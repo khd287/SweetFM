@@ -1,4 +1,6 @@
 .DS_Store
+Fibre/build/*
+Source/build/*
 *.mode1v3
 *.pbxuser
 *.perspectivev3
