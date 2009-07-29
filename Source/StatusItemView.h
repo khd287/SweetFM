@@ -1,8 +1,8 @@
 //
-//  CApp.h
+//  StatusItemView.h
 //  SweetFM
 //
-//  Created by Q on 23.05.09.
+//  Created by Q on 14.04.09.
 //
 //
 //  Permission is hereby granted, free of charge, to any person 
@@ -24,54 +24,19 @@
 //  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #import <Cocoa/Cocoa.h>
+#import "CApp.h"
 
-@class StatusItemView;
-@class SkinWindow;
-@class JSApp;
-
-@class CDevices;
-@class CPreferences;
-
-@class SUUpdater;
-
-
-extern NSString * const HotKeyToggleAppNotification;
-extern NSString * const OpenLastFMProfileNotification;
-
-extern NSString * const AppDemoWillQuitNotification;
-
-@interface CApp : NSObject {
-
-	IBOutlet SkinWindow *skinWindow;
-	
-	BOOL windowShouldHide;
-	BOOL skinLoadedFirstTime;
-	
-	JSApp *appProxy;
-	
-	CGWindowLevel inactiveWindowLevel;
-  
-  StatusItemView *statusItemView;
-	NSStatusItem *statusItem;
-		
-	//
-	// Other NIB handlers
-	//
-	CPreferences *prefs;
-	
-	//
-	// Controller
-	//
-	CDevices *device;
+@interface StatusItemView : NSView {
+  CApp          *mainApplication;
+  NSStatusItem  *statusItem;
+  NSImage       *menuImage;
+  NSImage       *menuAlternativeImage;
+  BOOL          isMenuVisible;
 }
 
-- (NSMenu *)applicationStatusBarMenu;
+@property (retain, nonatomic) CApp          *mainApplication;
+@property (retain, nonatomic) NSStatusItem  *statusItem;
 
-- (IBAction)togglePreferences:(id)sender;
-- (IBAction)openProfilePage:(id)sender;
-
-- (void)toggleApp;
-
-- (void)loadSkin;
+- (NSImage *)foregroundImage;
 
 @end

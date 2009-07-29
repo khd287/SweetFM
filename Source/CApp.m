@@ -37,6 +37,7 @@
 
 #import "XLog.h"
 #import "SkinSelectView.h"
+#import "StatusItemView.h"
 #import "SysInfo.h"
 
 #import "SUUpdater.h"
@@ -92,12 +93,15 @@ NSString * const AppDemoWillQuitNotification = @"AppDemoWillQuitNotification";
 		NSStatusBar *bar = [NSStatusBar systemStatusBar];
 		statusItem = [[bar statusItemWithLength:NSSquareStatusItemLength] retain];
 		
-		[statusItem setImage:[NSImage imageNamed:@"statusbar-black"]];
-		[statusItem setAlternateImage:[NSImage imageNamed:@"statusbar-white"]];
-		[statusItem setTarget:self];
-		[statusItem setHighlightMode:YES];
-		[statusItem setAction:@selector(showStatusBarMenu:)];
-		[statusItem sendActionOn:NSLeftMouseDownMask | NSPeriodicMask];
+    statusItemView = [[StatusItemView alloc] init];
+    [statusItemView retain];
+    statusItemView.statusItem = statusItem;
+    statusItemView.mainApplication = self;
+    
+    [statusItemView setToolTip:@"SweetFM"];
+    
+    [statusItem setView:statusItemView];
+    [statusItem setHighlightMode:YES];
 	}
 
 	//
@@ -248,6 +252,11 @@ NSString * const AppDemoWillQuitNotification = @"AppDemoWillQuitNotification";
 		device = [[CDevices alloc] initWithAppProxy:appProxy];
 	
 	[device refreshInterface];
+  
+  //
+  // Apply our menu [This must be done here, because the device object does not exist before here]
+  //
+  [statusItemView setMenu:[self applicationStatusBarMenu]];
 	
 	//
 	// Restore window state
@@ -341,11 +350,6 @@ NSString * const AppDemoWillQuitNotification = @"AppDemoWillQuitNotification";
 	[item release];
 	
 	return menu;
-}
-
-- (void)showStatusBarMenu:(id)sender
-{
-	[statusItem popUpStatusItemMenu:[self applicationStatusBarMenu]];
 }
 
 //
