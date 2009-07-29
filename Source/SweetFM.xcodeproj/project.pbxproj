@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		07FC1B7D102055B400D79A28 /* StatusItemView.m in Sources */ = {isa = PBXBuildFile; fileRef = 07FC1B7C102055B400D79A28 /* StatusItemView.m */; };
 		1DDD58160DA1D0A300B32029 /* App.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DDD58140DA1D0A300B32029 /* App.xib */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
@@ -153,6 +154,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		07FC1B7B102055A700D79A28 /* StatusItemView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StatusItemView.h; sourceTree = "<group>"; };
+		07FC1B7C102055B400D79A28 /* StatusItemView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StatusItemView.m; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		1DDD58150DA1D0A300B32029 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/App.xib; sourceTree = "<group>"; };
@@ -562,6 +565,8 @@
 		DC75A86B0FD57AB4004BC7D5 /* Views & Transformers */ = {
 			isa = PBXGroup;
 			children = (
+				07FC1B7C102055B400D79A28 /* StatusItemView.m */,
+				07FC1B7B102055A700D79A28 /* StatusItemView.h */,
 				DC765D440FD5CF0D001687EA /* ShortcutsView.h */,
 				DC765D450FD5CF0D001687EA /* ShortcutsView.m */,
 				DC052DCA0FD5974900AE9BAC /* SkinSelectView.h */,
@@ -968,6 +973,7 @@
 				DCD44F4C0FDD32A80096FF2A /* TFScrobble.m in Sources */,
 				DC3D60080FDEDAB4001B96F1 /* SysInfo.m in Sources */,
 				DCE0546910106860000AD69F /* HLyrics.m in Sources */,
+				07FC1B7D102055B400D79A28 /* StatusItemView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
