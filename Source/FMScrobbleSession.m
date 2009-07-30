@@ -24,6 +24,7 @@
 
 #import "FMScrobbleSession.h"
 
+#import "HSettings.h"
 #import "Device.h"
 #import "FMTrack.h"
 #import "QOperation.h"
@@ -294,6 +295,10 @@ NSString * const CommandTrackMetadata = @"trackMetadata";
 		return NO;
 	}
 		
+	if([HSettings adiumStatusChangeEnabled] == YES) {
+		[self changeAdiumStatusMessage:track];
+	}
+
 	XLog(@"Now playing notification sent.");
 	return YES;	
 }
@@ -365,6 +370,20 @@ NSString * const CommandTrackMetadata = @"trackMetadata";
 	}
 	
 	return YES;
+}
+
+//
+// Adium Support
+//
+
+#pragma mark *** Adium
+#pragma mark -
+
+- (void)changeAdiumStatusMessage:(DeviceTrack *)aTrack {
+	XMark();
+	NSAppleScript *adiumScript = [[NSAppleScript alloc] initWithSource:[NSString stringWithFormat:@"tell application \"Adium\"\ngo online with message \"♫ %@ - %@\"\nend tell\n", aTrack.name, aTrack.artist]];
+	[adiumScript executeAndReturnError:nil];
+	[adiumScript release];
 }
 
 @end

@@ -59,6 +59,7 @@ NSString * const EQEnabled = @"kEQEnabled";
 NSString * const EQPreset = @"kEQPreset";
 NSString * const EQGain = @"kEQGain";
 NSString * const RadioVolume = @"kRadioVolume";
+NSString * const AdiumUpdateStatus = @"kUpdateAdium";
 NSString * const DownloadLyrics = @"kDownloadLyrics";
 NSString * const CashtisticsCounter = @"kCashtisticsCounter";
 
@@ -351,6 +352,11 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(HSettings, instance);
 + (BOOL)coverDownloadEnabled
 {
 	return [[NSUserDefaults standardUserDefaults] boolForKey:AmazonCoverDownload];
+}
+
++ (BOOL)adiumStatusChangeEnabled
+{
+	return [[NSUserDefaults standardUserDefaults] boolForKey:AdiumUpdateStatus];
 }
 
 + (BOOL)lyricDownloadEnabled

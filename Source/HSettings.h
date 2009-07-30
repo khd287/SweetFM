@@ -123,6 +123,11 @@ typedef enum {
 + (BOOL)lyricDownloadEnabled;
 
 //
+// Adium
+//
++ (BOOL)adiumStatusChangeEnabled;
+
+//
 // Skins
 //
 + (SkinBundle *)selectedSkin;
